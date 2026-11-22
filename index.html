@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a1021">
+  <meta name="description" content="Bacon IPA Injector：上傳 IPA 與 DYLIB，透過自行部署的後端注入插件。">
+  <title>Bacon IPA Injector｜IPA 插件注入工具</title>
+  <style>
+  :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#ecf3ff;background:#090f20;color-scheme:dark}
+  *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 15% -10%,#244171 0,transparent 40%),radial-gradient(ellipse at 98% 24%,#30274f 0,transparent 40%),#090f20}
+  .wrap{width:min(1020px,calc(100% - 32px));margin:auto;padding:22px 0 70px}
+  header{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #2b3752;padding-bottom:18px}
+  .logo{font-weight:850;font-size:18px;letter-spacing:.4px;display:flex;align-items:center;gap:10px}.logo-icon{font-size:21px;display:inline-flex;align-items:center;justify-content:center;width:39px;height:39px;background:linear-gradient(135deg,#ffb06b,#fb6f9a);border-radius:12px}
+  .status{background:#182238;border:1px solid #354361;border-radius:100px;padding:9px 13px;font-size:13px;color:#d6e1f5}.status.good{border-color:#398b6f;color:#8befc8}.status.bad{border-color:#8d6342;color:#ffca9d}
+  .hero{text-align:center;padding:59px 0 31px}.eyebrow{font-size:12px;letter-spacing:2px;font-weight:700;color:#a1b5e6}
+  h1{font-size:clamp(34px,6.7vw,63px);line-height:1.14;letter-spacing:-1.5px;margin:15px 0 13px;font-weight:850}
+  h1 em{font-style:normal;background:linear-gradient(93deg,#70cefc,#b69afe);color:transparent;background-clip:text;-webkit-background-clip:text}
+  .hero p{font-size:16px;color:#a8bad5;line-height:1.8;margin:0}
+  .panel{border:1px solid #30405e;border-radius:22px;background:linear-gradient(150deg,#15213adf,#10182ce8);box-shadow:0 24px 60px #02071280;padding:26px}
+  .section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 16px;font-size:19px;font-weight:760}.section-title small{font-size:12px;font-weight:400;color:#96aac7}
+  .upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.upload{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;border:2px dashed #425877;background:#101b30;min-height:200px;border-radius:17px;padding:20px 12px;cursor:pointer;transition:.2s;overflow-wrap:anywhere}
+  .upload:hover,.upload.drag{border-color:#96bafc;background:#1b2b4b}.upload.chosen{border-color:#56d6aa;background:#133033}.upload .symbol{font-size:35px}.upload strong{font-size:19px}.sub{font-size:12px;color:#9bb0ce;line-height:1.7}.tag{font-size:11px;letter-spacing:.9px;color:#93c5fa;border:1px solid #3c6187;border-radius:7px;padding:5px 10px}
+  .engine{background:#0d172a;border:1px solid #2d3e5d;border-radius:16px;padding:19px;margin-top:20px}.engine h2{font-size:16px;margin:0 0 7px}.engine p{font-size:12px;color:#9baecb;line-height:1.7;margin:0 0 16px}
+  .fields{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:end}.field label{display:block;font-size:12px;color:#b8c8e3;margin:0 0 8px}
+  input[type=url],input[type=password]{width:100%;min-width:0;padding:12px;color:#edf4ff;background:#0b1324;border:1px solid #415471;border-radius:10px;font-size:14px;outline:none}
+  input:focus{border-color:#8cc8ff}button{font-family:inherit;border:0;border-radius:11px;padding:12px 17px;cursor:pointer;font-weight:750}
+  #testBtn{color:#ecf4ff;background:#304567}#testBtn:hover{background:#425f87}
+  #injectBtn{display:block;width:100%;font-size:17px;margin-top:22px;padding:16px;background:linear-gradient(105deg,#77cafa,#9b96fe);color:#08172b}
+  button:disabled{opacity:.44;cursor:not-allowed}.notice{font-size:13px;color:#aec3e0;margin:15px 0 0;line-height:1.65}.notice.err{color:#ffb7b7}.notice.good{color:#8cefcd}
+  .progress{height:9px;background:#293751;border-radius:9px;overflow:hidden;margin:17px 0 0}.progress div{height:100%;width:0;background:linear-gradient(90deg,#66baff,#ae99ff);transition:width .25s}
+  .result{border:1px solid #3a9773;border-radius:12px;background:#13312c;padding:15px;margin-top:18px;line-height:1.8}.result a{color:#8cdbff;font-weight:750}.result .sub{margin-top:6px}
+  .footnote{font-size:12px;color:#8fa4c2;line-height:1.85;margin-top:20px}
+  details{margin-top:20px;border:1px solid #2c3f60;border-radius:15px;background:#0e192c;padding:17px 22px;color:#b8c9e2;line-height:1.85;font-size:14px}summary{font-weight:750;cursor:pointer;color:#f1f5ff}details ol{padding-left:20px}details a{color:#91d0ff}
+  footer{text-align:center;color:#7285a2;font-size:12px;margin:31px 0}
+  [hidden]{display:none!important}
+  @media(max-width:700px){.hero{padding:37px 0 28px}.hero p{font-size:14px}.panel{padding:17px}.upload-grid{grid-template-columns:1fr}.upload{min-height:155px}.fields{grid-template-columns:1fr}#testBtn{width:100%}.section-title{font-size:16px}h1{letter-spacing:-.7px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header><div class="logo"><span class="logo-icon">🥓</span><span>BACON <strong>IPA INJECTOR</strong></span></div><div class="status" id="status">● 尚未連接注入引擎</div></header>
+  <section class="hero"><div class="eyebrow">IOS IPA CUSTOMIZATION TOOL / V1.2</div><h1>上傳 IPA，<br><em>注入你的插件。</em></h1><p>上傳 <b>.ipa</b> ＋ <b>.dylib</b>，由你設定的後端處理。<br>不需要將 Apple 憑證交給網站。</p></section>
+  <main class="panel">
+    <div class="section-title"><span>01 / 選擇檔案</span><small>可點擊或拖曳</small></div>
+    <div class="upload-grid">
+      <label class="upload" id="ipaBox"><input id="ipaInput" type="file" accept=".ipa" hidden><span class="symbol">📱</span><strong>選擇 IPA</strong><span class="sub" id="ipaName">尚未選擇 App 安裝檔</span><span class="tag">.IPA</span></label>
+      <label class="upload" id="dylibBox"><input id="dylibInput" type="file" accept=".dylib" hidden><span class="symbol">🧩</span><strong>選擇插件</strong><span class="sub" id="dylibName">尚未選擇動態函式庫</span><span class="tag">.DYLIB</span></label>
+    </div>
+    <section class="engine">
+      <h2>02 / 連接注入引擎</h2>
+      <p>GitHub Pages 只提供網頁介面，實際修改 IPA 需要部署 Render 等後端。你可以在這裡輸入後端網址，不必修改 GitHub 程式碼。</p>
+      <div class="fields">
+        <div class="field"><label for="apiUrl">Render 後端網址（HTTPS）</label><input type="url" id="apiUrl" placeholder="https://你的服務.onrender.com" spellcheck="false" autocapitalize="off"></div>
+        <div class="field"><label for="password">網站密碼（不儲存）</label><input id="password" type="password" placeholder="APP_PASSWORD" autocomplete="off"></div>
+        <button type="button" id="testBtn">測試連線</button>
+      </div>
+    </section>
+    <button type="button" id="injectBtn" disabled>開始注入 ↗</button>
+    <div class="notice" id="notice" role="status" aria-live="polite">先連接後端，再選擇兩個檔案。</div>
+    <div class="progress" id="progress" hidden><div id="progressFill"></div></div>
+    <div class="result" id="result" hidden><b>✅ 已完成注入處理</b><div id="resultInfo"></div><a id="download" href="#">下載修改後的 IPA ↓</a><div class="sub">下載後仍須透過 ESign／KSign 等工具自行簽名。</div></div>
+    <div class="footnote">🔒 請只使用你有權修改的 IPA 與可信插件。DRM／FairPlay 加密 IPA 不支援；成功處理不保證可正常啟動。後端產出檔只暫存 30 分鐘。</div>
+  </main>
+  <details><summary>怎樣部署後端才能真的注入？</summary><ol>
+    <li>進入 <a href="https://render.com/" target="_blank" rel="noopener noreferrer">Render</a>，連結這個 GitHub Repository，以 Docker Web Service 或 Blueprint（<code>render.yaml</code>）部署後端。</li>
+    <li>在 Render 設定環境變數 <code>APP_PASSWORD</code> 為強密碼，並設 <code>CORS_ORIGINS=https://k49kg9xmsd-prog.github.io</code>。</li>
+    <li>部署後將 Render 提供的 <code>https://...onrender.com</code> 網址填在上方，按「測試連線」。顯示「引擎已就緒」就可使用。</li>
+    <li>大容量 IPA 可能超過 Render 免費方案的記憶體、磁碟或處理時間上限。</li>
+  </ol></details>
+  <footer>BACON INJECTOR · GITHUB PAGES + SELF-HOSTED API</footer>
+</div>
+<script>
+(function(){
+  'use strict';
+  const $ = id => document.getElementById(id);
+  let ipa=null, dylib=null, ready=false, busy=false, maxIpa=2048, maxDylib=32;
+  try { $('apiUrl').value = localStorage.getItem('baconApiBase') || ''; } catch(e) {}
+  function tell(msg,type='') { $('notice').textContent=msg; $('notice').className='notice '+type; }
+  function badge(msg,type='') { $('status').textContent='● '+msg; $('status').className='status '+type; }
+  function base() {
+    const raw=$('apiUrl').value.trim(); if(!raw) return '';
+    try {
+      const parsed=new URL(raw);
+      if(parsed.username||parsed.password||parsed.search||parsed.hash||parsed.pathname!=='/') return '';
+      if(parsed.protocol!=='https:' && !(parsed.protocol==='http:' && ['localhost','127.0.0.1'].includes(parsed.hostname))) return '';
+      return parsed.origin;
+    } catch(e) {return '';}
+  }
+  function update(){ $('injectBtn').disabled=!(ipa&&dylib&&ready&&!busy); $('injectBtn').textContent=busy?'正在處理，請勿關閉…':'開始注入 ↗'; }
+  function choose(kind,file) {
+    if(!file)return;
+    const isIpa=kind==='ipa'; const ext=isIpa?'.ipa':'.dylib';
+    if(!file.name.toLowerCase().endsWith(ext)){tell('檔案格式錯誤，請選擇 '+ext,'err'); return;}
+    const limit=(isIpa?maxIpa:maxDylib)*1048576;
+    if(file.size>limit){tell('檔案超出目前伺服器的上傳上限（'+Math.floor(limit/1048576)+' MB）','err');return;}
+    if(!file.size){tell('檔案不能為空','err');return;}
+    const box=$(isIpa?'ipaBox':'dylibBox'); box.classList.add('chosen');
+    $(isIpa?'ipaName':'dylibName').textContent=file.name+' · '+(file.size/1048576).toFixed(1)+' MB';
+    if(isIpa) ipa=file; else dylib=file;
+    $('result').hidden=true; tell(ready?'檔案已選擇，可以開始注入。':'檔案已選擇，請先連接後端。');update();
+  }
+  $('ipaInput').addEventListener('change',e=>choose('ipa',e.target.files[0]));
+  $('dylibInput').addEventListener('change',e=>choose('dylib',e.target.files[0]));
+  [['ipaBox','ipa'],['dylibBox','dylib']].forEach(([id,kind])=>{
+    const node=$(id);
+    node.addEventListener('dragover',e=>{e.preventDefault();node.classList.add('drag');});
+    node.addEventListener('dragleave',()=>node.classList.remove('drag'));
+    node.addEventListener('drop',e=>{e.preventDefault();node.classList.remove('drag');choose(kind,e.dataTransfer.files[0]);});
+  });
+  $('apiUrl').addEventListener('input',()=>{ready=false;update();badge('請測試後端連線','bad');});
+  $('testBtn').addEventListener('click',async()=>{
+    const url=base();ready=false;update();
+    if(!url){badge('尚未設定後端','bad');tell('請輸入 Render 的 HTTPS 網址，不要加 /api/config 或其他路徑。','err');return;}
+    badge('連線測試中');tell('正在檢查注入伺服器…'); $('testBtn').disabled=true;
+    try{
+      const response=await fetch(url+'/api/config',{cache:'no-store'});
+      if(!response.ok) throw new Error('HTTP '+response.status);
+      const json=await response.json();
+      if(!json.ready)throw new Error('伺服器沒有安裝 zsign');
+      maxIpa=Number(json.max_ipa_mb)||maxIpa;maxDylib=Number(json.max_plugin_mb)||maxDylib;
+      ready=true; badge('注入引擎已就緒','good');tell('連線成功！現在可以注入 IPA。','good');
+      try{localStorage.setItem('baconApiBase',url);}catch(e){}
+    }catch(error){badge('無法連線伺服器','bad');tell('連線失敗：'+error.message+'。請檢查 Render 是否成功部署、後端網址和 CORS_ORIGINS。','err');}
+    finally{$('testBtn').disabled=false;update();}
+  });
+  $('injectBtn').addEventListener('click',()=>{
+    const url=base();if(!url||!ready||!ipa||!dylib||busy)return;
+    busy=true;update();$('result').hidden=true;$('progress').hidden=false;$('progressFill').style.width='0%';tell('正在上傳檔案…');
+    const data=new FormData();data.append('ipa',ipa);data.append('plugin',dylib);
+    const xhr=new XMLHttpRequest();xhr.open('POST',url+'/api/inject');xhr.timeout=720000;
+    if($('password').value)xhr.setRequestHeader('X-App-Password',$('password').value);
+    xhr.upload.onprogress=e=>{if(e.lengthComputable)$('progressFill').style.width=Math.min(98,Math.round(e.loaded/e.total*98))+'%';};
+    xhr.upload.onload=()=>{ $('progressFill').style.width='99%';tell('檔案已上傳，伺服器正在處理 IPA…');};
+    function finish(){busy=false;update();$('progress').hidden=true;}
+    xhr.onload=()=>{
+      finish();let result={};try{result=JSON.parse(xhr.responseText);}catch(e){}
+      if(xhr.status<200||xhr.status>=300){tell('注入失敗：'+(result.detail||'HTTP '+xhr.status),'err');return;}
+      if(typeof result.download_url!=='string'||!/^\/api\/download\/[0-9a-f]{32}$/.test(result.download_url)){tell('伺服器回傳的下載網址不正確。','err');return;}
+      $('resultInfo').textContent=[result.app_name||'App',result.plugin_name||'plugin.dylib'].join(' · ');
+      $('download').href=url+result.download_url;
+      $('download').setAttribute('download',result.filename||'injected.ipa');
+      $('result').hidden=false;tell('注入完成！請在 30 分鐘內下載。','good');
+    };
+    xhr.onerror=()=>{finish();tell('網路錯誤，請檢查 CORS 或後端服務是否中斷。','err');};
+    xhr.ontimeout=()=>{finish();tell('處理逾時，請使用較小的 IPA 或檢查後端紀錄。','err');};
+    xhr.send(data);
+  });
+  if(base()) tell('後端網址已儲存在瀏覽器，請按「測試連線」。');
+  update();
+})();
+</script>
+</body>
+</html>
